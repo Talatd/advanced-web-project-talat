@@ -1,0 +1,76 @@
+# CrewAI Tasks Configuration
+# SmartBasket E-Commerce AI Shopping Assistant
+
+analyze_needs:
+  description: >
+    Analyze the customer's query: "{customer_query}"
+    
+    Available products in the SmartBasket catalog:
+    {product_catalog}
+    
+    Parse the customer's requirements including:
+    - What type of products they need
+    - Their intended use-case (gaming, productivity, creative work, etc.)
+    - Any specific features mentioned
+    - Budget constraints if mentioned
+    
+    Provide a structured analysis of the customer's needs.
+  expected_output: >
+    A detailed analysis of the customer's requirements including identified needs,
+    preferred categories, use-case classification, and any constraints mentioned.
+  agent: product_recommender
+
+recommend_products:
+  description: >
+    Based on the needs analysis, recommend the best products from the SmartBasket catalog.
+    
+    Available products:
+    {product_catalog}
+    
+    For each recommended product, provide:
+    1. Product name and price
+    2. Why it's a good fit for the user's needs
+    3. Key features that match the user's requirements
+    4. Any considerations or trade-offs
+    
+    Recommend between 1-3 products maximum.
+  expected_output: >
+    A curated list of 1-3 product recommendations with detailed justification
+    for each recommendation, including feature-to-need mapping.
+  agent: product_recommender
+
+analyze_budget:
+  description: >
+    Review the recommended products and analyze the total cost.
+    
+    Available products:
+    {product_catalog}
+    
+    Customer query: "{customer_query}"
+    
+    Evaluate:
+    1. Total bundle cost
+    2. Value-for-money assessment
+    3. Any budget-friendly alternatives if the total seems high
+    4. Suggest if the customer could save money without sacrificing quality
+  expected_output: >
+    A budget analysis including total cost, value assessment,
+    and any money-saving suggestions while maintaining quality.
+  agent: budget_analyst
+
+check_compatibility:
+  description: >
+    Verify compatibility between all recommended products.
+    
+    Available products:
+    {product_catalog}
+    
+    Check for:
+    1. Interface compatibility (USB, HDMI, Bluetooth, etc.)
+    2. System requirements alignment
+    3. Any potential conflicts or issues
+    4. Recommended additional accessories if needed
+  expected_output: >
+    A compatibility report confirming all products work together,
+    flagging any potential issues, and suggesting necessary accessories.
+  agent: compatibility_checker
