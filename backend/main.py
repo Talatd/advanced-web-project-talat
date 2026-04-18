@@ -474,6 +474,35 @@ async def get_recommendations(request: QueryRequest):
     if not request.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty")
     
+    # ==========================================
+    #  LANGGRAPH ORCHESTRATOR INTERCEPTION
+    # ==========================================
+    from graph import run_graph
+    try:
+        graph_out = run_graph(request.query)
+        # If LangGraph detected a support query, handle it instantly without CrewAI
+        if graph_out.get("intent_detected") == "support":
+            return RecommendationResponse(
+                success=True,
+                query=request.query,
+                result=graph_out["result"],
+                recommended_product_ids=[],
+                agent_info={
+                    "mode": "langgraph_support",
+                    "message": "LangGraph Orchestrator routed this to Customer Support.",
+                    "agents_used": [
+                        "LangGraph Router", 
+                        "Customer Support Node"
+                    ]
+                }
+            )
+    except Exception as e:
+        print(f"LangGraph interception warning: {e}")
+        pass
+        
+    # ==========================================
+    #  PRODUCT RECOMMENDATION (CrewAI / Smart Engine)
+    # ==========================================
     api_key = os.getenv("OPENAI_API_KEY", "")
     use_live = bool(api_key and api_key != "your_openai_api_key_here")
     
@@ -493,11 +522,12 @@ async def get_recommendations(request: QueryRequest):
                 agent_info={
                     "mode": "live",
                     "agents_used": [
-                        "Product Recommender",
-                        "Budget Analyst", 
-                        "Compatibility Checker"
+                        "LangGraph Router",
+                        "Product Recommender (CrewAI)",
+                        "Budget Analyst (CrewAI)", 
+                        "Compatibility Checker (CrewAI)"
                     ],
-                    "process": "sequential"
+                    "process": "routing -> sequential"
                 }
             )
         except Exception as e:
@@ -507,15 +537,14 @@ async def get_recommendations(request: QueryRequest):
             return RecommendationResponse(
                 success=True,
                 query=request.query,
-                result=rec["result"],
+                result=rec["result"] + f"\n\n> ⚠️ *Note: Live CrewAI encountered an error ({str(e)[:100]}). Showing smart fallback.*",
                 recommended_product_ids=rec["recommended_product_ids"],
                 agent_info={
                     "mode": "demo_fallback",
                     "error": str(e)[:200],
                     "agents_used": [
-                        "Product Recommender (smart engine)",
-                        "Budget Analyst (smart engine)",
-                        "Compatibility Checker (smart engine)"
+                        "LangGraph Router",
+                        "Product Recommender (smart engine fallback)",
                     ]
                 }
             )
@@ -532,9 +561,8 @@ async def get_recommendations(request: QueryRequest):
                 "mode": "demo",
                 "message": "Smart recommendation engine active. Configure OPENAI_API_KEY in .env for full CrewAI.",
                 "agents_used": [
-                    "Product Recommender (smart engine)",
-                    "Budget Analyst (smart engine)",
-                    "Compatibility Checker (smart engine)"
+                    "LangGraph Router",
+                    "Smart Recommender Engine (Demo)"
                 ]
             }
         )
