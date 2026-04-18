@@ -1,4 +1,6 @@
 # LangGraph & CrewAI Coordination: Implementation Report
+Musa Talat Demir - 20220808022
+Project link : https://github.com/Talatd/advanced-web-project-talat
 
 ## 1. Introduction and Purpose
 For modern AI-driven applications, handling diverse user intents robustly is critical. While **CrewAI** is phenomenal for multi-agent collaboration (e.g., getting multiple experts to analyze a user's shopping requirements), it can sometimes lack a deterministic, structured workflow for fundamentally different flows. 

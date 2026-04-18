@@ -20,7 +20,7 @@ def intent_classifier_node(state: AgentState) -> Dict:
     query_lower = state["query"].lower()
     
     # Simple rule-based intent classification for demo
-    support_keywords = ["order", "track", "help", "return", "refund", "broken", "lost", "where is", "şikayet", "iade", "kargo"]
+    support_keywords = ["order", "track", "help", "return", "refund", "broken", "lost", "where is", "şikayet", "iade", "kargo", "nerede", "durumu"]
     
     intent = "recommend" # Default intent
     if any(keyword in query_lower for keyword in support_keywords):
