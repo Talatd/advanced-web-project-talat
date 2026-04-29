@@ -11,6 +11,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Load environment variables
 load_dotenv()
@@ -456,7 +457,8 @@ async def root():
 async def health_check():
     """API health check with mode info"""
     api_key = os.getenv("OPENAI_API_KEY", "")
-    has_key = bool(api_key and api_key != "your_openai_api_key_here")
+    google_key = os.getenv("GOOGLE_API_KEY", "")
+    has_key = bool((api_key and api_key != "your_openai_api_key_here") or (google_key and google_key != "your_google_api_key_here"))
     
     return {
         "status": "healthy",
@@ -503,14 +505,23 @@ async def get_recommendations(request: QueryRequest):
     # ==========================================
     #  PRODUCT RECOMMENDATION (CrewAI / Smart Engine)
     # ==========================================
-    api_key = os.getenv("OPENAI_API_KEY", "")
-    use_live = bool(api_key and api_key != "your_openai_api_key_here")
+    openai_key = os.getenv("OPENAI_API_KEY", "")
+    google_key = os.getenv("GOOGLE_API_KEY", "")
     
-    if use_live:
+    use_openai = bool(openai_key and openai_key != "your_openai_api_key_here")
+    use_google = bool(google_key and google_key != "your_google_api_key_here")
+    
+    if use_google or use_openai:
         # --- LIVE MODE: Real CrewAI execution ---
         try:
             from crew import kickoff_crew
-            result = kickoff_crew(request.query)
+            
+            # Initialize specialized LLM
+            llm = None
+            if use_google:
+                llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=google_key)
+            
+            result = kickoff_crew(request.query, llm=llm)
             result_str = str(result)
             product_ids = extract_product_ids(result_str)
             
@@ -521,6 +532,7 @@ async def get_recommendations(request: QueryRequest):
                 recommended_product_ids=product_ids,
                 agent_info={
                     "mode": "live",
+                    "model": "gemini-1.5-flash" if use_google else "gpt-4",
                     "agents_used": [
                         "LangGraph Router",
                         "Product Recommender (CrewAI)",

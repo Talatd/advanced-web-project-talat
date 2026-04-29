@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bot, Sparkles, Send, Loader2, ShoppingCart, Users, CheckCircle2, AlertCircle, Cpu } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:8000');
 
 const AIAssistantModal = ({ isOpen, onClose, addToCart, products }) => {
     const [messages, setMessages] = useState([
@@ -117,7 +117,7 @@ const AIAssistantModal = ({ isOpen, onClose, addToCart, products }) => {
 
     const renderMarkdown = (text) => {
         if (!text) return '';
-        
+
         let html = text
             // Headers
             .replace(/^### (.+)$/gm, '<h4 class="ai-h4">$1</h4>')
@@ -134,7 +134,7 @@ const AIAssistantModal = ({ isOpen, onClose, addToCart, products }) => {
             .replace(/^---$/gm, '<hr class="ai-hr" />')
             // Line breaks  
             .replace(/\n/g, '<br/>');
-        
+
         return html;
     };
 
@@ -169,8 +169,8 @@ const AIAssistantModal = ({ isOpen, onClose, addToCart, products }) => {
                                         <span className={`ai-status-dot ${backendStatus === 'offline' ? 'offline' : 'online'}`} />
                                         <span style={{ fontSize: '0.65rem' }}>
                                             {backendStatus === 'checking' ? 'Connecting...' :
-                                             backendStatus === 'offline' ? 'Offline' :
-                                             backendStatus === 'demo' ? 'Demo Mode' : 'Live'}
+                                                backendStatus === 'offline' ? 'Offline' :
+                                                    backendStatus === 'demo' ? 'Demo Mode' : 'Live'}
                                         </span>
                                     </div>
                                 </div>
@@ -215,8 +215,21 @@ const AIAssistantModal = ({ isOpen, onClose, addToCart, products }) => {
                                     )}
                                     <div
                                         className={`ai-message-bubble ${msg.role} ${msg.isError ? 'error' : ''}`}
-                                        dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
-                                    />
+                                    >
+                                        <div dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }} />
+                                        
+                                        {/* Display Agents Used (LangGraph Visibility) */}
+                                        {msg.agentInfo?.agents_used && (
+                                            <div className="ai-agents-list">
+                                                {msg.agentInfo.agents_used.map((agent, i) => (
+                                                    <span key={i} className="ai-agent-tag">
+                                                        {agent.includes('LangGraph') ? <Sparkles size={10} /> : <Cpu size={10} />}
+                                                        {agent}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </motion.div>
                             ))}
 

@@ -1,11 +1,41 @@
 # LangGraph & CrewAI Coordination: Implementation Report
 Musa Talat Demir - 20220808022
-Project link : https://github.com/Talatd/advanced-web-project-talat
+
+![SmartBasket LangGraph Dashboard](./images/dashboard_mockup.png)
+
+github repo link:https://github.com/Talatd/advanced-web-project-talat
+
+project link : https://advanced-web-project-talat-pjkc.vercel.app/
 
 ## 1. Introduction and Purpose
 For modern AI-driven applications, handling diverse user intents robustly is critical. While **CrewAI** is phenomenal for multi-agent collaboration (e.g., getting multiple experts to analyze a user's shopping requirements), it can sometimes lack a deterministic, structured workflow for fundamentally different flows. 
 
 **LangGraph** is incredibly effective at designing *state-machine* style workflows and orchestrations. We introduced LangGraph into the SmartBasket project not as a replacement for CrewAI, but as the **Master Orchestrator**. 
+
+### System Architecture Visualization
+```mermaid
+graph TD
+    User([User Prompt]) --> API[FastAPI Backend]
+    API --> LG{LangGraph Router}
+    
+    LG -->|Intent: Recommend| CAI[CrewAI Multi-Agent System]
+    LG -->|Intent: Support| CS[Customer Support Node]
+    
+    CAI --> Final[Final Response]
+    CS --> Final
+    
+    Final --> User
+    
+    subgraph Observability
+        LG -.-> LS[(LangSmith Traces)]
+        CAI -.-> LS
+    end
+    
+    style LG fill:#6366f1,color:#fff,stroke:#333,stroke-width:2px
+    style CAI fill:#8b5cf6,color:#fff,stroke:#333,stroke-width:2px
+    style CS fill:#10b981,color:#fff,stroke:#333,stroke-width:2px
+    style LS fill:#f59e0b,color:#fff,stroke:#333,stroke-width:2px
+```
 
 ### The Architecture
 Instead of immediately triggering our CrewAI multi-agent pipeline for every chat message, LangGraph intercepts the user's prompt. 
@@ -49,6 +79,32 @@ workflow.add_conditional_edges("classifier", route_by_intent, {
 smart_router_app = workflow.compile()
 ```
 
+#### Workflow Graph Visualization
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> classifier: Start Workflow
+    
+    state classifier {
+        direction TB
+        Classifier_Node: intent_classifier_node
+    }
+    
+    classifier --> crewai_recommender: intent = 'recommend'
+    classifier --> customer_support: intent = 'support'
+    
+    state crewai_recommender {
+        Recommendation_Node: product_recommendation_node
+    }
+    
+    state customer_support {
+        Support_Node: customer_support_node
+    }
+    
+    crewai_recommender --> [*]: Return Results
+    customer_support --> [*]: Return Help Content
+```
+
 ### Step 3: Integrating Graph into Existing Endpoints (`backend/main.py`)
 We intentionally avoided creating a new API endpoint, fulfilling the requirement that both CrewAI and LangGraph should work seamlessly in the existing project. 
 The `/api/recommend` POST endpoint was refactored:
@@ -75,6 +131,14 @@ except Exception as e:
 By wrapping the pipeline execution inside the LangGraph `smart_router_app.invoke(initial_state)` object, we inherently get **LangSmith** tracking capability.
 
 When executed with a valid `LANGCHAIN_API_KEY`, the entire graph resolution—including the payload state moving between the conditional edge from `classifier` to `customer_support`—is visualized in the cloud dashboard automatically. This guarantees that during future classroom demonstrations, we can view step-by-step latency profiling and payload tracking per node.
+
+#### Trace Hierarchy Preview
+| Step | Node | Input | Output | Latency |
+| :--- | :--- | :--- | :--- | :--- |
+| **1** | `__start__` | "Where is my order?" | initial_state | 1ms |
+| **2** | `classifier` | initial_state | `{intent: "support"}` | 120ms |
+| **3** | `customer_support` | state + intent | `{result: "...Support Content..."}` | 450ms |
+| **4** | `__end__` | final_state | result | 1ms |
 
 ---
 

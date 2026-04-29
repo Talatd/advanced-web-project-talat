@@ -497,6 +497,36 @@ h1, h2, h3, h4 {
   }
 }
 
+/* LangGraph Agent Visibility Styles */
+.ai-agents-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(102, 252, 241, 0.1);
+}
+
+.ai-agent-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(102, 252, 241, 0.1);
+  border: 1px solid rgba(102, 252, 241, 0.2);
+  color: var(--accent-color);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.ai-agent-tag svg {
+  color: var(--accent-color);
+}
+
 /* Additional utilities */
 .text-secondary { color: var(--text-secondary); }
 .mb-2 { margin-bottom: 0.5rem; }
