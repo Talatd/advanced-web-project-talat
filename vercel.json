@@ -1,17 +1,15 @@
 {
-  "version": 2,
   "framework": "vite",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
   "functions": {
     "backend/main.py": {
-      "runtime": "vercel-python@1.0.3"
+      "runtime": "@vercel/python",
+      "maxDuration": 30
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "backend/main.py"
+      "destination": "/backend/main.py"
     },
     {
       "source": "/(.*)",
