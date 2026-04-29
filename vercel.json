@@ -1,15 +1,9 @@
 {
   "framework": "vite",
-  "functions": {
-    "backend/main.py": {
-      "runtime": "@vercel/python",
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/backend/main.py"
+      "destination": "/api/index.py"
     },
     {
       "source": "/(.*)",
