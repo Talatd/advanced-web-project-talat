@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Catalog from './pages/Catalog';
-import Cart from './pages/Cart';
+import Home from './views/Home';
+import Catalog from './views/Catalog';
+import Cart from './views/Cart';
 import AIAssistantModal from './components/AIAssistantModal';
 import { products } from './data/products';
 
