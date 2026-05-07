@@ -4,6 +4,14 @@ FastAPI server that exposes the CrewAI recommendation engine to the React fronte
 Handles CORS, request validation, and provides both real CrewAI and demo endpoints.
 """
 
+# Vercel ve benzeri ortamlarda çalışma dizini repo kökü olabilir; yerel modüller (graph, crew…) api/ altında.
+import sys
+from pathlib import Path
+
+_api_dir = str(Path(__file__).resolve().parent)
+if _api_dir not in sys.path:
+    sys.path.insert(0, _api_dir)
+
 import os
 import json
 import re

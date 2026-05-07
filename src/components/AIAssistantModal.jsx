@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Bot, Sparkles, Send, Loader2, ShoppingCart, Users, CheckCircle2, AlertCircle, Cpu } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:8000');
+// Production: relative /api/... (same origin on Vercel). Optional: set VITE_API_URL in Vercel for an external API base.
+const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '') || (import.meta.env.DEV ? 'http://localhost:8000' : '');
 
 const AIAssistantModal = ({ isOpen, onClose, addToCart, products }) => {
     const [messages, setMessages] = useState([
@@ -29,7 +30,8 @@ const AIAssistantModal = ({ isOpen, onClose, addToCart, products }) => {
 
     const checkBackendHealth = async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/health`);
+            const healthUrl = API_BASE ? `${API_BASE}/api/health` : '/api/health';
+            const res = await fetch(healthUrl);
             if (res.ok) {
                 const data = await res.json();
                 setBackendStatus(data.mode || 'online');
@@ -56,7 +58,8 @@ const AIAssistantModal = ({ isOpen, onClose, addToCart, products }) => {
         }]);
 
         try {
-            const res = await fetch(`${API_BASE}/api/recommend`, {
+            const recommendUrl = API_BASE ? `${API_BASE}/api/recommend` : '/api/recommend';
+            const res = await fetch(recommendUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: userMessage })
@@ -83,7 +86,7 @@ const AIAssistantModal = ({ isOpen, onClose, addToCart, products }) => {
                 const filtered = prev.filter(m => m.role !== 'system');
                 return [...filtered, {
                     role: 'assistant',
-                    content: '⚠️ Could not reach the CrewAI backend. Make sure the Python server is running:\n\n```\ncd backend\npip install -r requirements.txt\npython main.py\n```\n\nThe server should be available at `http://localhost:8000`',
+                    content: `⚠️ Could not reach the AI backend.\n\n**Local:** \`cd api\` → \`pip install -r requirements.txt\` → \`python index.py\` (http://localhost:8000)\n\n**Vercel:** İstekler \`${API_BASE ? API_BASE + '/api/…' : '/api/… (aynı domain)'}\` adresine gidiyor. Deploy loglarında Python fonksiyonu hatası var mı bakın. API ayrı bir sunucudaysa Vercel **Environment Variables** içinde \`VITE_API_URL\` tanımlayıp yeniden deploy edin.`,
                     isError: true
                 }];
             });
